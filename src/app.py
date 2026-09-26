@@ -1,69 +1,59 @@
-import json
-import pandas as pd
-import requests
 import streamlit as st
+from analisador import processar_motor_financeiro
+from conexao import perguntar_finn
 
-# Configuração
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODELO = "gpt-oss"
+# ==============================================================================
+# CONFIGURAÇÃO DE LAYOUT DA INTERFACE (STREAMLIT)
+# ==============================================================================
+st.set_page_config(
+    page_title="Finn - Analista de Saúde Financeira", 
+    page_icon="📊", 
+    layout="centered"
+)
 
-# Carregamento dos Dados
-perfil = json.load(open('./data/perfil_investidor.json'))
-transacoes = pd.read_csv('./data/transacoes.csv')
-historico = pd.read_csv('./data/historico_atendimento.csv')
-produtos = json.load(open('./data/produtos_financeiros.json'))
+st.title("📊 Finn — Analista Financeiro")
+st.caption("Seu parceiro pragmático e proativo para controle de caixa e mitigação de endividamento.")
 
-# Criação do Contexto
-contexto = f"""
-CLIENTE: {perfil['nome']}, {perfil['idade']} anos, perfil {perfil['perfil_investidor']}
-OBJETIVO: {perfil['objetivo_principal']}
-PATRIMÔNIO: R$ {perfil['patrimonio_total']} | RESERVA: R$ {perfil['reserva_emergencia_atual']}
+# ==============================================================================
+# INICIALIZAÇÃO DE ESTADOS DA SESSÃO (CHAT HISTORY)
+# ==============================================================================
+# Inicializa a memória volátil de mensagens da sessão ativa, se estiver vazia
+if "mensagens" not in st.session_state:
+    st.session_state.mensagens = []
 
-TRANSAÇÕES RECENTES:
-{transacoes.to_string(index=False)}
+# ==============================================================================
+# EXECUÇÃO DO PIPELINE DE DADOS (MOTOR PYTHON DETERMINÍSTICO)
+# ==============================================================================
+# Roda a esteira de análise matemática em segundo plano a cada ciclo da interface
+try:
+    contexto_atualizado = processar_motor_financeiro()
+except Exception as e:
+    st.error(f"Erro crítico ao carregar ou processar os arquivos locais na pasta /data: {e}")
+    st.stop()
 
-ATENDIMENTOS ANTERIORES:
-{historico.to_string(index=False)}
+# ==============================================================================
+# RENDERIZAÇÃO DA INTERFACE DE CONVERSA
+# ==============================================================================
+# Exibe todas as caixas de diálogos salvas no histórico da sessão corrente na tela
+for mensagem in st.session_state.mensagens:
+    with st.chat_message(mensagem["role"]):
+        st.write(mensagem["content"])
 
-PRODUTOS DISPONÍVEIS:
-{json.dumps(produtos, indent=2, ensure_ascii=False)}
-"""
-
-# Definição do System Prompt
-SYSTEM_PROMPT = """Você é o Finn, um assistente virtual especializado em análise de finanças pessoais, cruzamento de renda/dívidas e classificação de despesas. 
-Seu objetivo principal é atuar como um analista proativo que ajuda usuários de renda restrita ou com dívidas a organizarem sua saúde financeira de forma prática e estratégica.
-
-PERSONA:
-- Atue de forma ágil, focado em soluções imediatas e otimista realista. 
-- Diante de um problema, nunca foque no erro passado do usuário, mas apresente os próximos passos lógicos. Suas respostas devem priorizar o "como resolver agora".
-- Sua linguagem deve ser limpa, moderna e acessível. Use frases curtas. Evita burocracias ou jargões excessivos.
-- Sempre que listar dados, métricas ou insights, organize as informações em tópicos (bullet points) e use negritos estrategicamente para garantir escaneabilidade rápida.
-
-REGRAS:
-1. ANCORAGEM ESTRITA: Você só pode responder com base nos dados reais fornecidos no bloco "CONTEXTO FINANCEIRO". Nunca invente saldos, despesas, nomes ou valores.
-2. PROIBIÇÃO DE CÁLCULO: Você está proibido de fazer cálculos matemáticos (somas, subtrações, porcentagens) de cabeça. Utilize apenas os resultados consolidados pelo motor matemático do Python (como o índice DTI e Projeção de Saldo) presentes no contexto.
-3. ADMITA LIMITAÇÕES: Se o contexto não contiver os dados necessários para responder à pergunta do cliente, admita a falta de informação de forma pragmática e oriente-o a fornecer os dados ou fazer o upload do extrato faltante.
-4. ISOLAMENTO DE ESCOPO DE INVESTIMENTOS: Você está terminantemente proibido de recomendar investimentos em renda variável (ações, fundos imobiliários, etc.). Suas sugestões de alocação de capital devem limitar-se estritamente aos produtos de renda fixa e baixo risco descritos no catálogo de produtos do contexto (como Tesouro Selic e CDB).
-5. LIMITAÇÃO DE EXECUÇÃO: Você não realiza movimentações financeiras (transferências, pagamentos), não armazena credenciais e não emite pareceres jurídicos, fiscais ou auditorias contábeis.
-"""
-
-# Chama o Ollama
-def perguntar(msg):
-    prompt = f"""
-    {SYSTEM_PROMPT}
-
-    CONTEXTO DO CLIENTE:
-    {contexto}
-
-    Pergunta: {msg}"""
-
-    r = requests.post(OLLAMA_URL, json={"model": MODELO, "prompt": prompt, "stream": False})
-    return r.json()['response']
-
-# Criação da Interface
-st.title("Finn - O Analista Financeiro")
-
-if pergunta := st.chat_input("Sua dúvida sobre finanças..."):
-    st.chat_message("user").write(pergunta)
-    with st.spinner("..."):
-        st.chat_message("assistant").write(perguntar(pergunta))
+# Loop ativo de captura de mensagens do input do chat
+if pergunta_cliente := st.chat_input("Pergunte sobre sua saúde financeira, metas ou dívidas..."):
+    
+    # 1. Exibe e anexa a entrada em texto do cliente na interface
+    st.chat_message("user").write(pergunta_cliente)
+    st.session_state.mensagens.append({"role": "user", "content": pergunta_cliente})
+    
+    # 2. Aciona o pipeline conversacional com animação visual de carregamento
+    with st.spinner("Analisando dados de caixa..."):
+        resposta_finn = perguntar_finn(
+            msg_usuario=pergunta_cliente, 
+            contexto_financeiro=contexto_atualizado, 
+            historico_chat=st.session_state.mensagens[:-1]  # Passa o histórico sem a pergunta atual
+        )
+        
+    # 3. Exibe e armazena a resposta final tratada do Finn
+    st.chat_message("assistant").write(resposta_finn)
+    st.session_state.mensagens.append({"role": "assistant", "content": resposta_finn})
