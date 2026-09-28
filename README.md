@@ -6,6 +6,12 @@ O **Finn** resolve o maior problema de agentes de IA na área de finanças: o ri
 
 ---
 
+## Apresentação do projeto
+
+Confira o pitch do projeto no [Youtube](https://youtu.be/e3ih4lKkThs)
+
+---
+
 ## Por que o Finn é diferente?
 
 Ao contrário de robôs financeiros que apenas definem conceitos genéricos de economia, o Finn é um **Parceiro Proativo e Pragmático**. Suas análises agem diretamente na saúde orçamentária do usuário em tempo real:

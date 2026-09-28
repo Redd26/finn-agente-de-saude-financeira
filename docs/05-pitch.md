@@ -8,6 +8,8 @@
 
 > Qual dor do cliente você resolve?
 
+Olá, eu sou o Lucas.
+
 “Hoje, controlar as finanças não é apenas uma questão de saber quanto dinheiro entra e quanto sai. O problema é perceber o risco antes que ele vire uma dívida difícil de controlar.
 
 Em agosto de 2026, a Serasa registrava **83,98 milhões de brasileiros inadimplentes**. E, em uma pesquisa divulgada pela própria Serasa, **50% dos consumidores disseram ter gastado mais do que planejavam no primeiro semestre de 2026**.
@@ -27,8 +29,6 @@ A diferença é que ele não funciona apenas como um chatbot que responde pergun
 “Com esses dados, ele consegue analisar, por exemplo, o **comprometimento de renda**, projetar o saldo de fechamento do mês e identificar situações que merecem atenção.
 
 E existe uma característica importante: o Finn é **proativo**. Em vez de esperar o usuário perguntar ‘minha vida financeira está bem?’, ele pode identificar um aumento incomum nas despesas ou um risco de saldo negativo e trazer esse alerta para o usuário.”
-
-“Por trás disso, temos uma arquitetura em que o LLM recebe dados financeiros contextualizados, passa por uma etapa de análise e cálculo de riscos e depois por regras de validação antes de gerar a resposta.”
 
 “Isso também permite trabalhar com regras de segurança: o agente não realiza movimentações financeiras, não inventa dados quando eles não estão disponíveis e limita suas recomendações ao contexto permitido.”
 
